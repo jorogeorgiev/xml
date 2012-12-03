@@ -36,17 +36,18 @@ public class SAXEmployeeTest {
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-
-
+     if(localName.equals("employee")){
+       employees.add(new Employee());
+     }
     }
   }
 
   @Test
   public void createTwoEmployeeObjectsFromXML() throws SAXException, IOException {
-    XMLReader xmlReader = XMLReaderFactory.createXMLReader();
-    xmlReader.setContentHandler(new EmployeeContentHandler());
-    xmlReader.parse(new InputSource(ClassLoader.getSystemResourceAsStream("employees.xml")));
     List<Employee> employees = Lists.newArrayList();
+    XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+    xmlReader.setContentHandler(new EmployeeContentHandler(employees));
+    xmlReader.parse(new InputSource(ClassLoader.getSystemResourceAsStream("employees.xml")));
     assertThat(employees.size(), is(2));
   }
 
