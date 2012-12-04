@@ -2,18 +2,23 @@ package task3;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * @author georgi.hristov@clouway.com
@@ -22,16 +27,16 @@ import static org.mockito.Mockito.verify;
 public class EmployeeParserTest {
 
 
-  private Source schema;
-  private Source validSource;
-  private Source invalidSource;
+  private InputStream schema;
+  private InputStream validSource;
+  private InputStream invalidSource;
 
   @Before
   public void setUp() throws SAXException {
 
-     schema = new StreamSource(getClass().getResourceAsStream("schema.xsd"));
-     validSource = new StreamSource(getClass().getResourceAsStream("validXML.xml"));
-     invalidSource = new StreamSource(getClass().getResourceAsStream("invalidXML.xml"));
+     schema = getClass().getResourceAsStream("schema.xsd");
+     validSource = getClass().getResourceAsStream("validXML.xml");
+     invalidSource = getClass().getResourceAsStream("invalidXML.xml");
 
   }
 
@@ -53,23 +58,39 @@ public class EmployeeParserTest {
 
   @Test
   public void employeeParserNotifiesOnReadingInvalidXML() throws SAXException {
-    ErrorPrompt prompt = mock(ErrorPrompt.class);
+    ErrorPrompt errorPrompt = mock(ErrorPrompt.class);
     XMLReader reader = XMLReaderFactory.createXMLReader();
     EmployeeContentHandler employeeContentHandler = new EmployeeContentHandler();
     reader.setContentHandler(employeeContentHandler);
-    EmployeeDataValidator validator = new EmployeeDataValidator(schema,invalidSource);
-    EmployeeInformationParser parser = new EmployeeInformationParser(validator,prompt,reader,new ArrayList<Employee>());
+    EmployeeDataContainer data = new EmployeeDataContainer(schema,invalidSource);
+    EmployeeInformationParser parser = new EmployeeInformationParser(data,reader,errorPrompt);
     parser.parse();
-    verify(prompt, times(1)).prompt("Invalid Employee Data");
+    verify(errorPrompt, times(1)).prompt("Invalid Employee Data!");
+
+  }
+
+  @Test
+  public void employeeParserNotifiesOnIOError() throws SAXException, IOException {
+    ErrorPrompt errorPrompt = mock(ErrorPrompt.class);
+    XMLReader reader = mock(XMLReader.class);
+    EmployeeContentHandler employeeContentHandler = new EmployeeContentHandler();
+    reader.setContentHandler(employeeContentHandler);
+    EmployeeDataContainer data = new EmployeeDataContainer(schema,validSource);
+    EmployeeInformationParser parser = new EmployeeInformationParser(data,reader,errorPrompt);
+    parser.parse();
+    doThrow(new IOException()).when(reader).parse(new InputSource(invalidSource));
+    verify(errorPrompt, times(1)).prompt("Error occurred while reading data!");
 
   }
 
 
-  private Boolean validate(Source source) {
 
-    EmployeeDataValidator validator = new EmployeeDataValidator(schema, source);
 
-    return validator.isDataValid();
+  private Boolean validate(InputStream source) {
+
+    EmployeeDataContainer container = new EmployeeDataContainer(schema, source);
+
+    return container.isDataValid();
 
   }
 
