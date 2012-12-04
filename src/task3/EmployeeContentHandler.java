@@ -17,10 +17,6 @@ public class EmployeeContentHandler extends DefaultHandler {
     super();
   }
 
-  public void startDocument() {
-
-
-  }
 
   @Override
   public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {

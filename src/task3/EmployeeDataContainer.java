@@ -18,15 +18,14 @@ import java.io.InputStream;
 public class EmployeeDataContainer implements DataContainer<InputSource> {
 
 
-  private InputStream schema;
-  private InputStream source;
+  private  String schema;
+  private  String source;
 
-  public EmployeeDataContainer(InputStream schema, InputStream source) {
+  public EmployeeDataContainer(String schema, String source) {
+
 
     this.schema = schema;
-
     this.source = source;
-
   }
 
   @Override
@@ -34,9 +33,9 @@ public class EmployeeDataContainer implements DataContainer<InputSource> {
     Boolean isValid;
     try {
       SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-      Schema employeeSchema = factory.newSchema(new StreamSource(schema));
+      Schema employeeSchema = factory.newSchema(new StreamSource(getClass().getResourceAsStream(schema)));
       Validator validator = employeeSchema.newValidator();
-      validator.validate(new StreamSource(source));
+      validator.validate(new StreamSource(getClass().getResourceAsStream(source)));
       isValid = true;
     } catch (SAXException e) {
       isValid = false;
@@ -48,6 +47,6 @@ public class EmployeeDataContainer implements DataContainer<InputSource> {
 
   @Override
   public InputSource getData() {
-    return new InputSource(source);
+    return new InputSource(getClass().getResourceAsStream(source));
   }
 }

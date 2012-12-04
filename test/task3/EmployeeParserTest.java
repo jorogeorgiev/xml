@@ -2,6 +2,7 @@ package task3;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -27,16 +28,16 @@ import static org.mockito.Mockito.when;
 public class EmployeeParserTest {
 
 
-  private InputStream schema;
-  private InputStream validSource;
-  private InputStream invalidSource;
+  private String schema;
+  private String validSource;
+  private String invalidSource;
 
   @Before
   public void setUp() throws SAXException {
 
-     schema = getClass().getResourceAsStream("schema.xsd");
-     validSource = getClass().getResourceAsStream("validXML.xml");
-     invalidSource = getClass().getResourceAsStream("invalidXML.xml");
+     schema = "schema.xsd";
+     validSource ="validXML.xml";
+     invalidSource = "invalidXML.xml";
 
   }
 
@@ -78,7 +79,7 @@ public class EmployeeParserTest {
     EmployeeDataContainer data = new EmployeeDataContainer(schema,validSource);
     EmployeeInformationParser parser = new EmployeeInformationParser(data,reader,errorPrompt);
     parser.parse();
-    doThrow(new IOException()).when(reader).parse(new InputSource(invalidSource));
+    doThrow(new IOException()).when(reader).parse(new InputSource(getClass().getResourceAsStream(validSource)));
     verify(errorPrompt, times(1)).prompt("Error occurred while reading data!");
 
   }
@@ -86,7 +87,7 @@ public class EmployeeParserTest {
 
 
 
-  private Boolean validate(InputStream source) {
+  private Boolean validate(String source) {
 
     EmployeeDataContainer container = new EmployeeDataContainer(schema, source);
 
