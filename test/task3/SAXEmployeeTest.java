@@ -1,6 +1,7 @@
 package task3;
 
 import com.google.common.collect.Lists;
+import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -38,12 +39,11 @@ public class SAXEmployeeTest {
   }
 
 
-
   interface EmployeeDataValidator {
     Boolean isValid();
   }
 
-  class XMLEmployeeDataValidator implements EmployeeDataValidator{
+  class XMLEmployeeDataValidator implements EmployeeDataValidator {
 
     private SchemaFactory factory;
     private Validator validator;
@@ -61,19 +61,19 @@ public class SAXEmployeeTest {
 
     @Override
     public Boolean isValid() {
-       Boolean isValid=false;
+      Boolean isValid = false;
       try {
         factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         schema = factory.newSchema(schemaSource);
         validator = schema.newValidator();
         validator.validate(sourceToValidate);
-        isValid=true;
+        isValid = true;
       } catch (SAXException e) {
-        isValid=false;
+        isValid = false;
       } catch (IOException e) {
         System.out.println("Something happened reading the source");
       }
-       return  isValid;
+      return isValid;
     }
   }
 
@@ -94,6 +94,17 @@ public class SAXEmployeeTest {
     }
   }
 
+  private Source schema;
+  private String source;
+
+  @Before
+  public void setUp() {
+
+    schema = new StreamSource(getClass().getResourceAsStream("schema.xsd"));
+  }
+
+
+
   @Test
   public void createTwoEmployeeObjectsFromXML() throws SAXException, IOException {
     List<Employee> employees = Lists.newArrayList();
@@ -105,17 +116,29 @@ public class SAXEmployeeTest {
 
   @Test
   public void validatorReturnFalseOnInvalidXMLAccordingSchema() {
-    Source schemaSource = new StreamSource(getClass().getResourceAsStream("schema.xsd"));
-    Source sourceToValidate = new StreamSource(getClass().getResourceAsStream("invalidXML.xml"));
-    XMLEmployeeDataValidator validator = new XMLEmployeeDataValidator(schemaSource,sourceToValidate);
-    assertFalse(validator.isValid());
+
+    source = "invalidXML.xml";
+
+    assertFalse(validate(source));
   }
 
   @Test
   public void validatorReturnTrueOnValidXMLAccordingSchema() {
-    Source schemaSource = new StreamSource(getClass().getResourceAsStream("schema.xsd"));
-    Source sourceToValidate = new StreamSource(getClass().getResourceAsStream("validXML.xml"));
-    XMLEmployeeDataValidator validator = new XMLEmployeeDataValidator(schemaSource,sourceToValidate);
-    assertTrue(validator.isValid());
+
+    source = "validXML.xml";
+
+    assertTrue(validate(source));
+
   }
+
+  private Boolean validate(String sourceName) {
+
+    Source sourceToValidate = new StreamSource(getClass().getResourceAsStream(sourceName));
+
+    XMLEmployeeDataValidator validator = new XMLEmployeeDataValidator(schema, sourceToValidate);
+
+    return validator.isValid();
+
+  }
+
 }
