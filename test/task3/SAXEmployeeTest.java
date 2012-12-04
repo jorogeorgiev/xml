@@ -10,19 +10,19 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author georgi.hristov@clouway.com
@@ -39,51 +39,21 @@ public class SAXEmployeeTest {
   }
 
 
-  interface EmployeeDataValidator {
-    Boolean isValid();
-  }
-
-  class XMLEmployeeDataValidator implements EmployeeDataValidator {
-
-    private SchemaFactory factory;
-    private Validator validator;
-    private Schema schema;
-    private final Source schemaSource;
-    private final Source sourceToValidate;
-
-    public XMLEmployeeDataValidator(Source schemaSource, Source sourceToValidate) {
-
-      this.schemaSource = schemaSource;
-
-      this.sourceToValidate = sourceToValidate;
-
-    }
-
-    @Override
-    public Boolean isValid() {
-      Boolean isValid = false;
-      try {
-        factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        schema = factory.newSchema(schemaSource);
-        validator = schema.newValidator();
-        validator.validate(sourceToValidate);
-        isValid = true;
-      } catch (SAXException e) {
-        isValid = false;
-      } catch (IOException e) {
-        System.out.println("Something happened reading the source");
-      }
-      return isValid;
-    }
-  }
-
   class EmployeeContentHandler extends DefaultHandler {
 
     private List<Employee> employees;
+    private EmployeeDataValidator validator;
 
-    public EmployeeContentHandler(List<Employee> employees) {
+    public EmployeeContentHandler(List<Employee> employees, EmployeeDataValidator validator) {
       super();
       this.employees = employees;
+      this.validator = validator;
+    }
+
+    public void startDocument(){
+
+      validator.isXMLValid();
+
     }
 
     @Override
@@ -104,16 +74,6 @@ public class SAXEmployeeTest {
   }
 
 
-
-  @Test
-  public void createTwoEmployeeObjectsFromXML() throws SAXException, IOException {
-    List<Employee> employees = Lists.newArrayList();
-    XMLReader xmlReader = XMLReaderFactory.createXMLReader();
-    xmlReader.setContentHandler(new EmployeeContentHandler(employees));
-    xmlReader.parse(new InputSource(getClass().getResourceAsStream("validXML.xml")));
-    assertThat(employees.size(), is(2));
-  }
-
   @Test
   public void validatorReturnFalseOnInvalidXMLAccordingSchema() {
 
@@ -131,13 +91,33 @@ public class SAXEmployeeTest {
 
   }
 
+  @Test
+  public void handlerInvokesEmployeeDataValidatorOnDocumentStart() throws SAXException, IOException {
+    List<Employee> employees = Lists.newArrayList();
+    EmployeeDataValidator validator = mock(EmployeeDataValidator.class);
+    XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+    xmlReader.setContentHandler(new EmployeeContentHandler(employees, validator));
+    xmlReader.parse(new InputSource(getClass().getResourceAsStream(this.source="validXML.xml")));
+    verify(validator, times(1)).isXMLValid();
+  }
+
+  @Test
+  public void createTwoEmployeeObjectsFromXML() throws SAXException, IOException {
+    List<Employee> employees = Lists.newArrayList();
+    XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+    xmlReader.setContentHandler(new EmployeeContentHandler(employees, new XMLEmployeeDataValidator(new StreamSource(getClass().getResourceAsStream(this.source = "validXML.xml")), schema)));
+    xmlReader.parse(new InputSource(getClass().getResourceAsStream(this.source = "validXML.xml")));
+    assertThat(employees.size(), is(2));
+  }
+
+
   private Boolean validate(String sourceName) {
 
     Source sourceToValidate = new StreamSource(getClass().getResourceAsStream(sourceName));
 
     XMLEmployeeDataValidator validator = new XMLEmployeeDataValidator(schema, sourceToValidate);
 
-    return validator.isValid();
+    return validator.isXMLValid();
 
   }
 
