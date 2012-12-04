@@ -11,29 +11,30 @@ import java.io.IOException;
  */
 public class EmployeeInformationParser {
 
-  private final DataContainer<InputSource> dataContainer;
+  private final Data<InputSource> data;
   private final ErrorPrompt prompt;
   private final XMLReader reader;
 
 
-  public EmployeeInformationParser(DataContainer<InputSource> dataContainer,XMLReader reader ,ErrorPrompt prompt) {
+  public EmployeeInformationParser(Data<InputSource> data, XMLReader reader, ErrorPrompt prompt) {
 
-    this.dataContainer = dataContainer;
+    this.data = data;
     this.prompt = prompt;
     this.reader = reader;
   }
 
-  public void parse(){
+  public void parse() {
 
-    if(dataContainer.isDataValid()){
+    if (data.isDataValid()) {
       try {
-        reader.parse(dataContainer.getData());
+        reader.parse(data.getData());
       } catch (IOException e) {
         prompt.prompt("Error occurred while reading data!");
       } catch (SAXException e) {
         prompt.prompt("Error occurred while parsing data!");
       }
-    } else{
+
+    } else {
       prompt.prompt("Invalid Employee Data!");
     }
 

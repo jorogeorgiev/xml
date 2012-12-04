@@ -5,7 +5,7 @@ import java.io.IOException;
 /**
  * @author georgi.hristov@clouway.com
  */
-public interface DataContainer<T> {
+public interface Data<T> {
 
   Boolean isDataValid();
 
