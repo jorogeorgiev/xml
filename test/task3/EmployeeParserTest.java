@@ -13,6 +13,7 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doThrow;
@@ -28,16 +29,19 @@ import static org.mockito.Mockito.when;
 public class EmployeeParserTest {
 
 
-  private String schema;
-  private String validSource;
-  private String invalidSource;
+  private InputStream schema;
+  private InputStream validSource;
+  private InputStream invalidSource;
 
   @Before
   public void setUp() throws SAXException {
 
-     schema = "schema.xsd";
-     validSource ="validXML.xml";
-     invalidSource = "invalidXML.xml";
+    schema = getClass().getResourceAsStream("schema.xsd");
+    schema.mark(0);
+    validSource = getClass().getResourceAsStream("validXML.xml");
+    validSource.mark(0);
+    invalidSource = getClass().getResourceAsStream("invalidXML.xml");
+    invalidSource.mark(0);
 
   }
 
@@ -63,8 +67,8 @@ public class EmployeeParserTest {
     XMLReader reader = XMLReaderFactory.createXMLReader();
     EmployeeContentHandler employeeContentHandler = new EmployeeContentHandler();
     reader.setContentHandler(employeeContentHandler);
-    EmployeeDataContainer data = new EmployeeDataContainer(schema,invalidSource);
-    EmployeeInformationParser parser = new EmployeeInformationParser(data,reader,errorPrompt);
+    EmployeeDataContainer data = new EmployeeDataContainer(schema, invalidSource);
+    EmployeeInformationParser parser = new EmployeeInformationParser(data, reader, errorPrompt);
     parser.parse();
     verify(errorPrompt, times(1)).prompt("Invalid Employee Data!");
 
@@ -76,18 +80,16 @@ public class EmployeeParserTest {
     XMLReader reader = mock(XMLReader.class);
     EmployeeContentHandler employeeContentHandler = new EmployeeContentHandler();
     reader.setContentHandler(employeeContentHandler);
-    EmployeeDataContainer data = new EmployeeDataContainer(schema,validSource);
-    EmployeeInformationParser parser = new EmployeeInformationParser(data,reader,errorPrompt);
+    EmployeeDataContainer data = new EmployeeDataContainer(schema, validSource);
+    EmployeeInformationParser parser = new EmployeeInformationParser(data, reader, errorPrompt);
     parser.parse();
-    doThrow(new IOException()).when(reader).parse(new InputSource(getClass().getResourceAsStream(validSource)));
+    doThrow(new IOException()).when(reader).parse(new InputSource(validSource));
     verify(errorPrompt, times(1)).prompt("Error occurred while reading data!");
 
   }
 
 
-
-
-  private Boolean validate(String source) {
+  private Boolean validate(InputStream source) {
 
     EmployeeDataContainer container = new EmployeeDataContainer(schema, source);
 
