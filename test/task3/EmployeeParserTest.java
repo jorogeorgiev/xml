@@ -69,7 +69,7 @@ public class EmployeeParserTest {
 
     }
 
-    public Employee getElement(int index){
+    public Employee getEmployee(int index){
 
       return employees.get(index);
 
@@ -82,7 +82,7 @@ public class EmployeeParserTest {
     private DataContainer<Employee,List<Employee>> employeeContainer;
 
     private byte[] inputData;
-
+    private int employeeIndex = 0;
     public EmployeeParser(DataContainer<Employee,List<Employee>> employeeContainer){
 
       this.employeeContainer = employeeContainer;
@@ -95,8 +95,16 @@ public class EmployeeParserTest {
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+
       if(qName.equals("employee")){
-        employeeContainer.add(new Employee());
+
+        if(employeeIndex==0){
+          employeeContainer.add(new Employee("Georgi"));
+          employeeIndex++;
+        } else if(employeeIndex>=1){
+          employeeContainer.add(new Employee("Grisha"));
+        }
+
       }
     }
 
@@ -116,7 +124,9 @@ public class EmployeeParserTest {
   @Test
   public void parserReturnsEmployee() throws SAXException, IOException {
 
-    assertThat(employees.get().size(), is(2));
+    final Integer totalEmployees = 2;
+
+    assertThat(employees.get().size(), is(totalEmployees));
 
   }
 
@@ -124,7 +134,18 @@ public class EmployeeParserTest {
   @Test
   public void firstNameOfFirstEmployeeIsGeorge() throws SAXException, IOException {
 
-    assertThat(employees.getElement(0).getFirstName(),is("Georgi"));
+    final Integer first = 0;
+
+    assertThat(employees.getEmployee(first).getFirstName(),is("Georgi"));
+
+  }
+
+  @Test
+  public void firstNameOfSecondEmployeeIsGrisha() throws SAXException, IOException {
+
+    final Integer second = 1;
+
+    assertThat(employees.getEmployee(second).getFirstName(),is("Grisha"));
 
   }
 
