@@ -15,6 +15,7 @@ import sun.misc.IOUtils;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.core.Is.is;
@@ -78,13 +79,28 @@ public class EmployeeParserTest {
 
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
   private class EmployeeParser extends DefaultHandler {
 
     private DataContainer<Employee, List<Employee>> employeeContainer;
 
     private byte[] inputData;
-    private String name;
-    private boolean employeeFlag = false;
+    private List<String> firstName=new ArrayList<String>();
+    private List<String> lastName= new ArrayList<String>();
+    private boolean firstNameFlag = false;
+    private boolean lastNameFlag = false;
 
     public EmployeeParser(DataContainer<Employee, List<Employee>> employeeContainer) {
 
@@ -97,27 +113,50 @@ public class EmployeeParserTest {
     }
 
     @Override
+    public void endDocument() throws SAXException {
+      for(int i =0;i<firstName.size();i++){
+        employeeContainer.add(new Employee(firstName.get(i),lastName.get(i)));
+      }
+
+
+    }
+
+    @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
       if (localName.equals("firstName")) {
-        employeeFlag = true;
+        firstNameFlag = true;
+      }
+      if(localName.equals("lastName")){
+        lastNameFlag = true;
       }
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
       if(localName.equals("firstName")) {
-        employeeContainer.add(new Employee(name));
-        employeeFlag = false;
-        name = "";
+        firstNameFlag = false;
+      }
+      if(localName.equals("lastName")){
+        lastNameFlag = false;
       }
     }
 
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
-      if (employeeFlag) {
+      StringBuilder builder = new StringBuilder();
+      if (firstNameFlag) {
         for (int i = start; i < start + length; i++) {
-          name += ch[i];
+          builder.append(ch[i]);
         }
+        firstName.add(builder.toString());
+        builder.delete(0,builder.length());
+      }
+      if(lastNameFlag) {
+        for (int i = start; i < start + length; i++) {
+          builder.append(ch[i]);
+        }
+        lastName.add(builder.toString());
+        builder.delete(0,builder.length());
       }
     }
 
@@ -165,10 +204,31 @@ public class EmployeeParserTest {
   @Test
   public void firstNameOfThirdEmployeeIsGrigor() throws SAXException, IOException {
 
-    final Integer second = 1;
+    final Integer third = 2;
 
-    assertThat(employees.getEmployee(second).getFirstName(), is("Grigor"));
+    assertThat(employees.getEmployee(third).getFirstName(), is("Grigor"));
 
   }
+
+
+  //will skip the traditional hardcoded return principle and we will try the real implementation.
+
+  @Test
+  public void lastNameOfFirstEmployeeIsGeorgiev(){
+
+    final Integer first = 0;
+
+    assertThat(employees.getEmployee(first).getLastName(),is("Georgiev"));
+
+  }
+
+  @Test
+  public void lastNameOfSecondEmployeeIsAngelov(){
+     Integer second = 1;
+
+    assertThat(employees.getEmployee(second).getLastName(),is("Angelov"));
+
+  }
+
 
 }
