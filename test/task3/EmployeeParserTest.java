@@ -2,22 +2,15 @@ package task3;
 
 
 import com.google.common.collect.Lists;
+import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.Attributes;
-import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 import sun.misc.IOUtils;
-
-
-import javax.xml.XMLConstants;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,12 +18,28 @@ import java.util.List;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
 
 /**
  * @author georgi.hristov@clouway.com
  */
 public class EmployeeParserTest {
+
+  EmployeeDataContainer employees;
+
+  @Before
+  public void setUp() throws IOException, SAXException {
+
+    employees = new EmployeeDataContainer();
+
+    EmployeeParser parser = new EmployeeParser(employees);
+
+    InputStream employeeData = EmployeeParserTest.class.getResourceAsStream("validXML.xml");
+
+    XMLReader reader = XMLReaderFactory.createXMLReader();
+
+    parser.parse(employeeData, reader);
+  }
+
 
 
   interface DataContainer<InputType,OutputType> {
@@ -59,6 +68,13 @@ public class EmployeeParserTest {
       return  employees;
 
     }
+
+    public Employee getElement(int index){
+
+      return employees.get(index);
+
+    }
+
   }
 
   private class EmployeeParser extends DefaultHandler {
@@ -100,25 +116,16 @@ public class EmployeeParserTest {
   @Test
   public void parserReturnsEmployee() throws SAXException, IOException {
 
-    ErrorPrompt prompt  = mock(ErrorPrompt.class);
-
-    ErrorHandler handler = new XMLErrorHandler(prompt,new ErrorMessage());
-
-    DataContainer<Employee,List<Employee>> employees = new EmployeeDataContainer();
-
-    EmployeeParser parser = new EmployeeParser(employees);
-
-    InputStream employeeData = EmployeeParserTest.class.getResourceAsStream("validXML.xml");
-
-    XMLReader reader = XMLReaderFactory.createXMLReader();
-
-    reader.setErrorHandler(handler);
-
-    parser.parse(employeeData ,reader);
-
     assertThat(employees.get().size(), is(2));
 
   }
 
+
+  @Test
+  public void firstNameOfFirstEmployeeIsGeorge() throws SAXException, IOException {
+
+    assertThat(employees.getElement(0).getFirstName(),is("Georgi"));
+
+  }
 
 }
