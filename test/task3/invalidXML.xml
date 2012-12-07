@@ -15,9 +15,8 @@
       <employer>
 				<name>CLOUWAY LTD.</name>
         <startDate>2012-12-02</startDate>
-      <!--  <endDate>2012-12-21</endDate>   -->
 				<position>junior software developer</position>
-			</emloyer>
+			</employer>
 			<address>
 				<street>Hristo Botev</street>
 				<streetNumber>12</streetNumber>
@@ -30,7 +29,7 @@
 			</address>
 		</employee>
   <employee>
-      <firstName>Grisha</firstName>
+      <fistName>Grisha</firstName>
 			<lastName>Angelov</lastName>
       <age>23</age>
 			<employer>
